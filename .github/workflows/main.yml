@@ -12,11 +12,7 @@ permissions:
 jobs:
   build_site:
     runs-on: ubuntu-latest
-    # 這是關鍵：告訴 GitHub 所有的指令都要進入 CHESS 資料夾執行
-    defaults:
-      run:
-        working-directory: CHESS
-
+    # 這裡不再需要 defaults/working-directory，因為檔案就在根目錄
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,8 +31,7 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-pages-artifact@v3
         with:
-          # 打包後的輸出路徑也要對應加上資料夾前綴
-          path: 'CHESS/dist/'
+          path: 'dist/' # 打包後的檔案就在 dist，不需要加 CHESS/
 
   deploy:
     needs: build_site
