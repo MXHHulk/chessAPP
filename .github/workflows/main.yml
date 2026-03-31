@@ -12,6 +12,11 @@ permissions:
 jobs:
   build_site:
     runs-on: ubuntu-latest
+    # 這是關鍵：告訴 GitHub 所有的指令都要進入 CHESS 資料夾執行
+    defaults:
+      run:
+        working-directory: CHESS
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,7 +27,6 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        # 即使是靜態 React 專案，雲端也需要安裝必要的套件才能打包
         run: npm install
 
       - name: Build
@@ -31,7 +35,8 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'dist/' # Vite 打包後的輸出資料夾
+          # 打包後的輸出路徑也要對應加上資料夾前綴
+          path: 'CHESS/dist/'
 
   deploy:
     needs: build_site
