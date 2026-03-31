@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: ["main"] # 當你推送到 main 分支時觸發
+    branches: ["main"]
 
 permissions:
   contents: read
@@ -20,9 +20,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
       - name: Install dependencies
+        # 即使是靜態 React 專案，雲端也需要安裝必要的套件才能打包
         run: npm install
 
       - name: Build
@@ -36,9 +36,6 @@ jobs:
   deploy:
     needs: build_site
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
