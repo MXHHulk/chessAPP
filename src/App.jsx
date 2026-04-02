@@ -18,7 +18,7 @@ const NAV_ITEMS = [
 
 export default function App() {
   const [view, setView]     = useState('home');
-  const { tactics, addTactic, deleteTactic } = useTactics();
+  const { tactics } = useTactics();
 
   return (
     <div className="min-h-screen bg-stone-100 text-slate-800 font-sans selection:bg-emerald-200">
@@ -61,8 +61,6 @@ export default function App() {
         {view === 'tactics'   && (
           <TacticsView
             tactics={tactics}
-            addTactic={addTactic}
-            deleteTactic={deleteTactic}
           />
         )}
       </main>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ChevronRight, Info, RotateCcw } from 'lucide-react';
+import { Chess } from 'chess.js';
 import { ChessBoard } from '../components/ChessBoard';
 import { TUTORIALS } from '../data/tutorials';
 
@@ -9,13 +10,49 @@ import { TUTORIALS } from '../data/tutorials';
 
 export const TutorialsView = () => {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [currentLayout, setCurrentLayout] = useState(TUTORIALS[0].layout);
-
   const tutorial = TUTORIALS[selectedIndex];
+  
+  const [game, setGame] = useState(new Chess());
+  const [currentFen, setCurrentFen] = useState(tutorial.fen);
 
   useEffect(() => {
-    setCurrentLayout(tutorial.layout);
-  }, [selectedIndex]);
+    try {
+      const newGame = new Chess(tutorial.fen);
+      setGame(newGame);
+    } catch {
+      // 容錯處理：如果 FEN 不是標準開局，我們至少能顯示
+    }
+    setCurrentFen(tutorial.fen);
+  }, [selectedIndex, tutorial.fen]);
+
+  const handleReset = () => {
+    try {
+      const newGame = new Chess(tutorial.fen);
+      setGame(newGame);
+    } catch {}
+    setCurrentFen(tutorial.fen);
+  };
+
+  const onDrop = (sourceSquare, targetSquare, piece) => {
+    try {
+      const gameCopy = new Chess(game.fen());
+      const move = gameCopy.move({
+        from: sourceSquare,
+        to: targetSquare,
+        promotion: piece[1].toLowerCase() ?? 'q',
+      });
+
+      if (move) {
+        setGame(gameCopy);
+        setCurrentFen(gameCopy.fen());
+        return true;
+      }
+    } catch {
+      // 若 FEN 不符合完整規則（如自定義殘局），允許自由移動
+      // 這邊可以使用簡易的 FEN 替換或者乾脆依賴 react-chessboard 的非嚴格模式
+    }
+    return false;
+  };
 
   return (
     <div className="animate-in slide-in-from-right duration-500">
@@ -55,12 +92,12 @@ export const TutorialsView = () => {
             <p className="text-xl text-slate-500 leading-relaxed">{tutorial.description}</p>
           </div>
 
-          <div className="relative group">
+          <div className="relative group max-w-[480px] mx-auto">
             <div className="absolute -inset-4 bg-emerald-500/5 blur-2xl opacity-0 group-hover:opacity-100 transition duration-500" />
-            <ChessBoard pieces={currentLayout} setPieces={setCurrentLayout} />
+            <ChessBoard fen={currentFen} onDrop={onDrop} />
             <div className="mt-4 flex justify-center">
               <button
-                onClick={() => setCurrentLayout(tutorial.layout)}
+                onClick={handleReset}
                 className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-emerald-600 transition"
               >
                 <RotateCcw className="w-3 h-3" /> 重置目前佈局

@@ -1,6 +1,19 @@
 // ============================================================
 // 教學內容資料
-// 新增課程：在此陣列末尾加入一個新物件即可
+// ============================================================
+//
+// 新增教學模板：
+// 將以下模板複製並貼到陣列最後面，修改參數即可：
+// {
+//   id: 'custom_id',
+//   title: '第X課：標題',
+//   description: '簡短敘述',
+//   steps: [
+//     '第一條要點。',
+//     '第二條要點。'
+//   ],
+//   fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', // 棋盤的 FEN 字串
+// }
 // ============================================================
 
 export const TUTORIALS = [
@@ -14,12 +27,7 @@ export const TUTORIALS = [
       '王后 (Queen) 站在顏色與自己相同的格子上。',
       '白棋永遠先行。',
     ],
-    layout: {
-      'd1': { type: 'q', color: 'white' }, 'e1': { type: 'k', color: 'white' },
-      'd8': { type: 'q', color: 'black' }, 'e8': { type: 'k', color: 'black' },
-      'a1': { type: 'r', color: 'white' }, 'h1': { type: 'r', color: 'white' },
-      'a8': { type: 'r', color: 'black' }, 'h8': { type: 'r', color: 'black' },
-    },
+    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
   },
   {
     id: 'king',
@@ -30,11 +38,7 @@ export const TUTORIALS = [
       '國王不能移動到會被對方棋子攻擊的格子上。',
       '特殊走法：王車易位 (Castling)。',
     ],
-    layout: {
-      'e4': { type: 'k', color: 'white' },
-      'd5': { type: 'p', color: 'black' },
-      'f5': { type: 'p', color: 'black' },
-    },
+    fen: '8/8/8/3pp3/4K3/8/8/8 w - - 0 1',
   },
   {
     id: 'knight',
@@ -45,10 +49,7 @@ export const TUTORIALS = [
       '騎士每次移動必定會改變落點格子的顏色。',
       '騎士適合在封閉的局面中作戰。',
     ],
-    layout: {
-      'd4': { type: 'n', color: 'white' },
-      'c6': { type: 'p', color: 'black' },
-      'e6': { type: 'p', color: 'black' },
-    },
+    fen: '8/8/2p1p3/8/3N4/8/8/8 w - - 0 1',
   },
 ];
+
