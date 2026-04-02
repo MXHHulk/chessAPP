@@ -40,7 +40,7 @@ export const HomeView = ({ setView }) => (
       <div className="hidden lg:block relative">
         <div className="absolute -inset-4 bg-emerald-500/10 blur-3xl rounded-full" />
         <div className="relative bg-white p-6 rounded-[32px] shadow-2xl border border-slate-100 rotate-2">
-          <ChessBoard pieces={TUTORIALS[0].layout} readOnly />
+          <ChessBoard fen={TUTORIALS[0].fen} readOnly />
         </div>
       </div>
     </div>
