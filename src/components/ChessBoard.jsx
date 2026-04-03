@@ -9,7 +9,7 @@ import { Chessboard } from 'react-chessboard';
 //   onDrop     - 移動棋子成功的回調處理 (若有提供)
 // ============================================================
 
-export const ChessBoard = ({ fen, readOnly = false, onDrop }) => {
+export const ChessBoard = ({ fen, readOnly = false, onDrop, ...props }) => {
   return (
     <div className="w-full aspect-square border-[10px] border-emerald-950 rounded-lg overflow-hidden shadow-2xl relative bg-[#739552]">
       <Chessboard 
@@ -18,6 +18,7 @@ export const ChessBoard = ({ fen, readOnly = false, onDrop }) => {
         onPieceDrop={onDrop}
         customDarkSquareStyle={{ backgroundColor: '#739552' }}
         customLightSquareStyle={{ backgroundColor: '#ebecd0' }}
+        {...props}
       />
     </div>
   );

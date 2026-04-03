@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { ChevronRight, Info, RotateCcw } from 'lucide-react';
+import { ChevronRight, Info, RotateCcw, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
 import { Chess } from 'chess.js';
 import { ChessBoard } from '../components/ChessBoard';
 import { TUTORIALS } from '../data/tutorials';
 
 // ============================================================
-// TutorialsView - 基礎課程頁面
+// TutorialsView - 基礎課程頁面 (互動式教學)
 // ============================================================
 
 export const TutorialsView = () => {
@@ -14,44 +14,172 @@ export const TutorialsView = () => {
   
   const [game, setGame] = useState(new Chess());
   const [currentFen, setCurrentFen] = useState(tutorial.fen);
+  
+  // 互動任務狀態
+  const [taskStep, setTaskStep] = useState(0);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [feedbackError, setFeedbackError] = useState('');
+  
+  // 高亮位置狀態
+  const [selectedSquare, setSelectedSquare] = useState('');
+  const [optionSquares, setOptionSquares] = useState({});
 
   useEffect(() => {
-    try {
-      const newGame = new Chess(tutorial.fen);
-      setGame(newGame);
-    } catch {
-      // 容錯處理：如果 FEN 不是標準開局，我們至少能顯示
-    }
-    setCurrentFen(tutorial.fen);
+    resetTutorial();
+    // eslint-disable-next-line
   }, [selectedIndex, tutorial.fen]);
 
-  const handleReset = () => {
+  const resetTutorial = () => {
     try {
       const newGame = new Chess(tutorial.fen);
       setGame(newGame);
     } catch {}
     setCurrentFen(tutorial.fen);
+    setTaskStep(0);
+    setIsSuccess(false);
+    setFeedbackError('');
+    setSelectedSquare('');
+    setOptionSquares({});
   };
 
-  const onDrop = (sourceSquare, targetSquare, piece) => {
+  const interactiveTask = tutorial.interactiveTask;
+
+  // 取得可以走步的位置，並且設定高亮樣式
+  const getMoveOptions = (square) => {
+    if (isSuccess || tutorial.readOnly) return; // 完成或唯讀狀態下不高亮
+
+    const moves = game.moves({
+      square,
+      verbose: true,
+    });
+    
+    if (moves.length === 0) {
+      setOptionSquares({ [square]: { background: 'rgba(255, 255, 0, 0.4)' } });
+      return;
+    }
+
+    const newSquares = {};
+    moves.forEach((move) => {
+      // 若目標格子有棋子(吃子)則使用較大空心圓，否則用小實心圓
+      newSquares[move.to] = {
+        background:
+          game.get(move.to) && game.get(move.to).color !== game.get(square).color
+            ? 'radial-gradient(circle, rgba(0,0,0,.1) 85%, transparent 85%)'
+            : 'radial-gradient(circle, rgba(0,0,0,.1) 25%, transparent 25%)',
+        borderRadius: '50%',
+      };
+    });
+    // 高亮被選取的格子
+    newSquares[square] = {
+      background: 'rgba(255, 255, 0, 0.4)',
+    };
+    setOptionSquares(newSquares);
+  };
+
+  // 當使用者點擊格子時觸發的邏輯
+  const onSquareClick = (square) => {
+    if (isSuccess) return;
+    
+    // 若已選取且點擊的是可移動的位置，則自動進行移動
+    if (selectedSquare && optionSquares[square] && square !== selectedSquare) {
+      const moveResult = handleLogicMove(selectedSquare, square, 'q'); // 預設點擊升變為后
+      if (moveResult) {
+        setSelectedSquare('');
+        setOptionSquares({});
+        return;
+      }
+    }
+
+    // 否則，檢測點下去的格子上方是否有棋子，有的話就顯示移動點
+    const piece = game.get(square);
+    if (piece) {
+      setSelectedSquare(square);
+      getMoveOptions(square);
+    } else {
+      setSelectedSquare('');
+      setOptionSquares({});
+    }
+  };
+
+  const onPieceDragBegin = (piece, sourceSquare) => {
+    if (isSuccess) return;
+    setSelectedSquare(sourceSquare);
+    getMoveOptions(sourceSquare);
+  };
+
+  const onPieceDrop = (sourceSquare, targetSquare, piece) => {
+    setSelectedSquare('');
+    setOptionSquares({});
+    return handleLogicMove(sourceSquare, targetSquare, piece[1]?.toLowerCase() || 'q');
+  };
+
+  // 獨立出的下棋處理邏輯
+  const handleLogicMove = (sourceSquare, targetSquare, promotionP) => {
+    if (isSuccess) return false;
+    setFeedbackError('');
+
+    const gameCopy = new Chess(game.fen());
+
+    // 嚴格互動模式：如有任務，必須符合預期步數
+    if (interactiveTask) {
+      const expectedMove = interactiveTask.expectedMoves[taskStep];
+      if (
+        sourceSquare === expectedMove.from && 
+        targetSquare === expectedMove.to &&
+        (!expectedMove.promotion || expectedMove.promotion === promotionP)
+      ) {
+        // 解答正確，進行移動
+        try {
+          const validMove = gameCopy.move({
+            from: sourceSquare,
+            to: targetSquare,
+            promotion: expectedMove.promotion || promotionP || 'q',
+          });
+          if (validMove) {
+            setGame(gameCopy);
+            setCurrentFen(gameCopy.fen());
+            
+            // 推進任務狀態
+            if (taskStep + 1 >= interactiveTask.expectedMoves.length) {
+              setIsSuccess(true);
+            } else {
+              setTaskStep(step => step + 1);
+            }
+            return true;
+          }
+        } catch {
+          return false;
+        }
+      } else {
+         // 走錯步
+         setFeedbackError('這步棋不是我們要練習的走法喔，請再試一次！');
+         return false;
+      }
+    }
+
+    // 自由模式：沒有設定 interactiveTask 時
     try {
-      const gameCopy = new Chess(game.fen());
-      const move = gameCopy.move({
+      const validMove = gameCopy.move({
         from: sourceSquare,
         to: targetSquare,
-        promotion: piece[1].toLowerCase() ?? 'q',
+        promotion: promotionP || 'q',
       });
-
-      if (move) {
+      if (validMove) {
         setGame(gameCopy);
         setCurrentFen(gameCopy.fen());
         return true;
       }
     } catch {
-      // 若 FEN 不符合完整規則（如自定義殘局），允許自由移動
-      // 這邊可以使用簡易的 FEN 替換或者乾脆依賴 react-chessboard 的非嚴格模式
+      return false;
     }
     return false;
+  };
+
+  const nextModule = () => {
+    if (selectedIndex < TUTORIALS.length - 1) {
+      setSelectedIndex(selectedIndex + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   return (
@@ -94,16 +222,57 @@ export const TutorialsView = () => {
 
           <div className="relative group max-w-[480px] mx-auto">
             <div className="absolute -inset-4 bg-emerald-500/5 blur-2xl opacity-0 group-hover:opacity-100 transition duration-500" />
-            <ChessBoard fen={currentFen} onDrop={onDrop} />
-            <div className="mt-4 flex justify-center">
+            <div className={`relative transition-all duration-300 ${isSuccess ? 'ring-4 ring-emerald-400 ring-offset-4 rounded-xl' : ''}`}>
+              <ChessBoard 
+                fen={currentFen} 
+                onDrop={onPieceDrop}
+                onSquareClick={onSquareClick}
+                onPieceDragBegin={onPieceDragBegin}
+                customSquareStyles={optionSquares}
+              />
+            </div>
+            
+            <div className="mt-6 flex justify-center">
               <button
-                onClick={handleReset}
+                onClick={resetTutorial}
                 className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-emerald-600 transition"
               >
-                <RotateCcw className="w-3 h-3" /> 重置目前佈局
+                <RotateCcw className="w-4 h-4" /> 重新設定佈局
               </button>
             </div>
           </div>
+
+          {/* 互動任務區塊 */}
+          {interactiveTask && (
+            <div className="mt-8 transition-all">
+              {!isSuccess ? (
+                <div className="p-6 bg-slate-50 border-2 border-dashed border-slate-300 rounded-[24px] text-center">
+                  <p className="text-lg font-bold text-slate-700">{interactiveTask.instruction}</p>
+                  {feedbackError && (
+                    <div className="mt-3 flex items-center justify-center gap-2 text-rose-500 font-bold animate-pulse">
+                      <AlertCircle className="w-5 h-5" />
+                      <span>{feedbackError}</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-6 bg-emerald-50 border-2 border-emerald-400 rounded-[24px] text-center animate-in zoom-in-95 duration-500">
+                  <div className="flex items-center justify-center gap-3 text-emerald-600 mb-4">
+                    <CheckCircle2 className="w-8 h-8 flex-none" />
+                    <p className="text-xl font-black">{interactiveTask.successMessage}</p>
+                  </div>
+                  {selectedIndex < TUTORIALS.length - 1 && (
+                    <button
+                      onClick={nextModule}
+                      className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-full font-bold transition-all shadow-lg hover:shadow-emerald-500/30 hover:-translate-y-1"
+                    >
+                      進入下一課 <ArrowRight className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="mt-12">
             <div className="p-8 bg-slate-50 rounded-[32px] border border-slate-100">

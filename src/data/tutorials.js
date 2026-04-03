@@ -37,17 +37,27 @@ export const TUTORIALS = [
       '國王可以向任何方向移動「一格」。',
       '國王不能移動到會被對方棋子攻擊的格子上。',
     ],
-    fen: '8/8/8/8/2K2p2/8/8/8 w - - 0 1',
+    fen: '8/8/8/8/2K5/8/8/8 w - - 0 1',
+    interactiveTask: {
+      instruction: '輪到你的回合！試著將國王向前移動一步 (c4 到 c5)。',
+      expectedMoves: [{ from: 'c4', to: 'c5' }],
+      successMessage: '太棒了！這就是國王的移動方式。',
+    }
   },
   {
     id: 'rook',
-    title: '第二課：直線上的王者，防守與進攻的重砲 —— 城堡',
-    description: '簡單、粗暴、高效。',
+    title: '第二課：直線上的王者 —— 城堡',
+    description: '簡單、粗暴、高效。這就是防守與進攻的重砲。',
     steps: [
       '城堡可以沿著直線移動任意格數。',
       '城堡不能越過其他棋子。',
     ],
     fen: '8/1p3p2/8/8/8/1p3R2/8/8 w - - 0 1',
+    interactiveTask: {
+      instruction: '試著利用城堡吃掉黑方的兵 (f3 到 f7)！',
+      expectedMoves: [{ from: 'f3', to: 'f7' }],
+      successMessage: '漂亮！城堡在空曠的直線上威力無比。',
+    }
   },
   {
     id: 'bishop',
@@ -57,7 +67,12 @@ export const TUTORIALS = [
       '主教只能沿著斜線移動任意格數。',
       '主教不能越過其他棋子。',
     ],
-    fen: '8/3p4/7p/p7/4p3/7p/1p6/2B2B2 w - - 0 1',
+    fen: '8/3p4/7p/p7/4p3/7p/1p6/2B5 w - - 0 1',
+    interactiveTask: {
+      instruction: '我們來試試斜線的威力，用主教堂堂正正地吃掉黑方的兵 (c1 到 h6)！',
+      expectedMoves: [{ from: 'c1', to: 'h6' }],
+      successMessage: '幹得好！記得主教只能在與它相同的顏色格子上移動喔。',
+    }
   },
   {
     id: 'queen',
@@ -68,16 +83,30 @@ export const TUTORIALS = [
       '王后不能越過其他棋子。',
     ],
     fen: '8/5p2/8/8/8/1p3Q2/8/8 w - - 0 1',
+    interactiveTask: {
+      instruction: '展現王后的強大火力，直接斜向消滅黑方的兵吧 (f3 到 b7)！',
+      // wait, b7 from f3? Wait: rank 3 to 7 is 4 ranks. file f to b is 4 files. So yes, f3 to b7 is diagonal. Or wait. f3: e4, d5, c6, b7. Correct.
+      expectedMoves: [{ from: 'f3', to: 'b7', alternative: {from: 'f3', to:'f7'} }],
+      // Let's just do f3 to f7
+      // Wait, queen can go to f7 or b7. Let's make the expected move f3 -> f7
+      expectedMoves: [{ from: 'f3', to: 'f7' }],
+      successMessage: '太強了吧！這就是為什麼所有人都喜歡王后。',
+    }
   },
   {
     id: 'knight',
-    title: '第五課：不按牌理出牌的跳躍者，混戰中的惡夢 —— 騎士',
-    description: '棋盤上最獨特的存在，他是唯一能「越過」其他棋子的兵種。',
+    title: '第五課：不按牌理出牌的跳躍者 —— 騎士',
+    description: '棋盤上最獨特的存在，唯一能「越過」其他棋子的兵種。',
     steps: [
       '它的移動軌跡呈「L」形。',
       '騎士每次移動必定會改變落點格子的顏色。',
     ],
     fen: '8/8/8/2p1p3/8/3N4/8/8 w - - 0 1',
+    interactiveTask: {
+      instruction: '騎士可以跳過棋子。試著用騎士吃掉左上方的兵 (d3 到 c5)！',
+      expectedMoves: [{ from: 'd3', to: 'c5' }],
+      successMessage: '神出鬼沒！騎士的 L 形走法在擁擠的戰場上非常吃香。',
+    }
   },
   {
     id: 'pawn',
@@ -89,17 +118,26 @@ export const TUTORIALS = [
       '兵只能斜線吃子。',
     ],
     fen: '8/8/3p4/8/8/8/4P3/8 w - - 0 1',
+    interactiveTask: {
+      instruction: '這是兵的第一步，大膽地前進兩步吧 (e2 到 e4)！',
+      expectedMoves: [{ from: 'e2', to: 'e4' }],
+      successMessage: '勇敢的第一步！記得之後兵就只能每次前進一格了喔。',
+    }
   },
   {
     id: 'promotion',
     title: '第七課：兵的「升變」',
     description: '殘局階段逆轉勝負的關鍵策略。',
     steps: [
-      '兵到達底線的同時必須馬上完成升變，這是同一手棋的內容。',
-      '升變的棋子類型由選擇升變的棋手決定，可以變換成除了國王以外的任何棋子。',
-      '升變後的棋子會立即獲得該棋子的所有能力，包括移動和吃子。',
+      '兵到達底線的同時必須馬上完成升變。',
+      '可以變換成除了國王以外的任何棋子（通常變為王后）。',
     ],
-    fen: '4p3/5P2/8/8/8/8/8/8 w - - 0 1',
+    fen: '8/5P2/8/8/8/8/8/8 w - - 0 1',
+    interactiveTask: {
+      instruction: '將兵推到底線 (f7 到 f8)，並選擇升變為王后！',
+      expectedMoves: [{ from: 'f7', to: 'f8', promotion: 'q' }],
+      successMessage: '麻雀變鳳凰！這就是殘局中反敗為勝的終極武器。',
+    }
   },
   {
     id: 'en_passant',
@@ -108,7 +146,15 @@ export const TUTORIALS = [
     steps: [
       '當對方兵第一次移動兩格時，如果你的兵在它的旁邊，你可以吃掉它。',
     ],
-    fen: '8/3p4/8/2P5/8/8/8/8 w - - 0 1',
+    // The FEN needs to allow En Passant.
+    // For en passant to be valid, the previous move must be the black pawn moving 2 squares.
+    // In FEN, e.g. "8/8/8/2Pp4/8/8/8/8 w - d6 0 1". White pawn on c5, Black pawn moved d7->d5. Target square d6 is ep target.
+    fen: '8/8/8/2Pp4/8/8/8/8 w - d6 0 1',
+    interactiveTask: {
+      instruction: '對方剛才推進了 d 列的兵。趕快使出「吃過路兵」，將兵移到左上角 (c5 到 d6)！',
+      expectedMoves: [{ from: 'c5', to: 'd6' }],
+      successMessage: '幹得好！這一招經常能讓新手對手大吃一驚。',
+    }
   },
   {
     id: 'castling',
@@ -120,6 +166,11 @@ export const TUTORIALS = [
       '國王不能處於被攻擊的狀態，也不能越過被攻擊的格子。',
     ],
     fen: '8/8/8/8/8/8/8/R3K2R w KQ - 0 1',
+    interactiveTask: {
+      instruction: '我們來進行「短易位」。將國王移動兩格 (e1 到 g1)，城堡會自動躍過它！',
+      expectedMoves: [{ from: 'e1', to: 'g1' }],
+      successMessage: '國王進入了安全的堡壘！現在你可以放心進攻了。',
+    }
   },
   {
     id: 'check',
@@ -131,7 +182,12 @@ export const TUTORIALS = [
       '2. 用其他棋子擋住威脅。',
       '3. 吃掉威脅源。',
     ],
-    fen: '8/4k3/8/8/4R3/8/2K5/8 w - - 0 1',
+    fen: '8/4k3/8/8/4R3/8/2K5/8 b - - 0 1',
+    interactiveTask: {
+      instruction: '白方的城堡正在「將軍」！趕緊將黑方的國王移動到安全的地方 (比如 e7 到 d7)。',
+      expectedMoves: [{ from: 'e7', to: 'd7' }],
+      successMessage: '危機解除！永遠要對國王的安全保持警覺。',
+    }
   },
   {
     id: 'checkmate',
