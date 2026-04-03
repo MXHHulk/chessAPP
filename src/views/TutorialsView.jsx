@@ -1,16 +1,23 @@
 import { useState, useEffect } from 'react';
-import { ChevronRight, Info, RotateCcw, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
+import { ChevronRight, ChevronDown, Info, RotateCcw, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
 import { Chess } from 'chess.js';
 import { ChessBoard } from '../components/ChessBoard';
-import { TUTORIALS } from '../data/tutorials';
+import { TUTORIAL_CATEGORIES } from '../data/tutorials';
 
 // ============================================================
-// TutorialsView - 基礎課程頁面 (互動式教學 - 三欄式)
+// TutorialsView - 基礎課程頁面
 // ============================================================
 
 export const TutorialsView = () => {
+  // 將分類結構展平，方便按順序切換 "下一課"
+  const flattenedTutorials = TUTORIAL_CATEGORIES.flatMap(c => c.items);
+  
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const tutorial = TUTORIALS[selectedIndex];
+  const tutorial = flattenedTutorials[selectedIndex];
+
+  // 尋找當前課程所屬的類別 ID
+  const initialCategory = TUTORIAL_CATEGORIES.find(c => c.items.some(item => item.id === tutorial.id))?.id;
+  const [expandedCategory, setExpandedCategory] = useState(initialCategory || TUTORIAL_CATEGORIES[0].id);
   
   const [game, setGame] = useState(new Chess());
   const [currentFen, setCurrentFen] = useState(tutorial.fen);
@@ -26,8 +33,21 @@ export const TutorialsView = () => {
 
   useEffect(() => {
     resetTutorial();
+    // 切換課程時，自動展開該課程所在的類別
+    const newCategory = TUTORIAL_CATEGORIES.find(c => c.items.some(item => item.id === tutorial.id))?.id;
+    if (newCategory) setExpandedCategory(newCategory);
     // eslint-disable-next-line
   }, [selectedIndex, tutorial.fen]);
+
+  // 設定錯誤提示的自動清除
+  useEffect(() => {
+    if (feedbackError) {
+      const timer = setTimeout(() => {
+        setFeedbackError('');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [feedbackError]);
 
   const resetTutorial = () => {
     try {
@@ -44,7 +64,7 @@ export const TutorialsView = () => {
 
   const interactiveTask = tutorial.interactiveTask;
 
-  // 取得可以走步的位置，並且設定高亮樣式（無分回合）
+  // 取得可以走步的位置，並且設定高亮樣式
   const getMoveOptions = (square) => {
     if (isSuccess || tutorial.readOnly) return; 
 
@@ -55,16 +75,15 @@ export const TutorialsView = () => {
     }
 
     let searchGame = game;
-    // 重點優化：為了讓新手可以看到非當前回合棋子的走法
-    // 建立一個臨時的盤面並強制切換回合 (w <=> b)
+    // 讓新手可以看到非當前回合棋子的走法
     if (piece.color !== game.turn()) {
       const fenTokens = game.fen().split(' ');
       fenTokens[1] = piece.color;
-      fenTokens[3] = '-'; // 剛切換回合無法確定過路兵狀態，一律清除避免 FEN 載入錯誤
+      fenTokens[3] = '-'; 
       try {
         searchGame = new Chess(fenTokens.join(' '));
       } catch (e) {
-        searchGame = game; // 失效時降級為原本狀態
+        searchGame = game; 
       }
     }
 
@@ -82,7 +101,7 @@ export const TutorialsView = () => {
     moves.forEach((move) => {
       newSquares[move.to] = {
         background:
-          game.get(move.to) && game.get(move.to).color !== game.get(square).color
+          (move.flags.includes('c') || move.flags.includes('e'))
             ? 'radial-gradient(circle, rgba(0,0,0,.1) 85%, transparent 85%)'
             : 'radial-gradient(circle, rgba(0,0,0,.1) 25%, transparent 25%)',
         borderRadius: '50%',
@@ -98,6 +117,18 @@ export const TutorialsView = () => {
     if (isSuccess) return;
     
     if (selectedSquare && optionSquares[square] && square !== selectedSquare) {
+      
+      // 若該移動會導致升變（走到底線的兵），則這裡只負責清除高亮狀態
+      // 因為 react-chessboard 原生的點擊移動不支援自訂升變彈出，但我們可以依賴 onPromotionPieceSelect
+      // * 註：雖然可以處理，但若要維持簡單的嚴格比對，我們將點擊升變預設為 q 再交給邏輯判斷是否過關
+      const isPawn = game.get(selectedSquare)?.type === 'p';
+      const isPromotionRank = square[1] === '8' || square[1] === '1';
+      
+      if (isPawn && isPromotionRank && interactiveTask) {
+        // 如果這個任務要求特定升變，這裡若直接點擊只能預設 q，如果出錯就會彈回
+        // 為了避免問題，我們仍然將 Q 傳下去，若玩家想選別的，建議他用拖曳的
+      }
+      
       const moveResult = handleLogicMove(selectedSquare, square, 'q'); 
       if (moveResult) {
         setSelectedSquare('');
@@ -108,9 +139,11 @@ export const TutorialsView = () => {
 
     const piece = game.get(square);
     if (piece) {
+      // 點擊己方或敵方棋子，顯示可行步數
       setSelectedSquare(square);
       getMoveOptions(square);
     } else {
+      // 點擊非法空格，立刻清除選取與高亮狀態
       setSelectedSquare('');
       setOptionSquares({});
     }
@@ -125,7 +158,21 @@ export const TutorialsView = () => {
   const onPieceDrop = (sourceSquare, targetSquare, piece) => {
     setSelectedSquare('');
     setOptionSquares({});
+    
+    const isPawn = piece[1] === 'P'; // 判斷是否為 'wP' 或是 'bP'
+    const isPromotionRank = targetSquare[1] === '8' || targetSquare[1] === '1';
+    
+    if (isPawn && isPromotionRank) {
+      // 發生升變時，中止立即移動，交由 react-chessboard 的 onPromotionPieceSelect 來處理
+      return true;
+    }
+    
     return handleLogicMove(sourceSquare, targetSquare, piece[1]?.toLowerCase() || 'q');
+  };
+
+  const onPromotionPieceSelect = (piece, sourceSquare, targetSquare) => {
+    const promotionPiece = piece[1]?.toLowerCase() || 'q';
+    return handleLogicMove(sourceSquare, targetSquare, promotionPiece);
   };
 
   const handleLogicMove = (sourceSquare, targetSquare, promotionP) => {
@@ -135,7 +182,6 @@ export const TutorialsView = () => {
     const gameCopy = new Chess(game.fen());
 
     if (interactiveTask) {
-      // 預留機制：未來如加入黑方自動回應，可在此處判定回合數或增加黑方回應邏輯
       const expectedMove = interactiveTask.expectedMoves[taskStep];
       if (
         sourceSquare === expectedMove.from && 
@@ -186,12 +232,12 @@ export const TutorialsView = () => {
   };
 
   const nextModule = () => {
-    if (selectedIndex < TUTORIALS.length - 1) {
+    if (selectedIndex < flattenedTutorials.length - 1) {
       setSelectedIndex(selectedIndex + 1);
-      // 清理選單捲軸狀態或回到頂部（針對外層若有容器）
+      // 清理選單捲軸狀態
       const listContainer = document.getElementById('tutorial-list');
       if (listContainer) {
-        const activeBtn = listContainer.children[selectedIndex + 1];
+        const activeBtn = document.getElementById(`tutorial-btn-${selectedIndex + 1}`);
         if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
     }
@@ -200,7 +246,6 @@ export const TutorialsView = () => {
   return (
     <div className="animate-in slide-in-from-right duration-500 h-[calc(100vh-140px)] min-h-[600px] flex overflow-hidden">
       
-      {/* 隱藏捲軸的自訂 CSS */}
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -213,32 +258,59 @@ export const TutorialsView = () => {
         {/* =========================================
             左欄：側邊選單 (約 25%) 
         ========================================= */}
-        <aside className="w-[25%] flex flex-col gap-3 pr-2 overflow-y-auto custom-scrollbar pb-4" id="tutorial-list">
+        <aside className="w-[25%] flex flex-col gap-4 pr-2 overflow-y-auto custom-scrollbar pb-4" id="tutorial-list">
           <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest ml-2 mb-1 flex-shrink-0">
             教學模組
           </h3>
-          {TUTORIALS.map((t, idx) => (
-            <button
-              key={t.id}
-              onClick={() => setSelectedIndex(idx)}
-              className={[
-                'w-full text-left p-5 rounded-[24px] transition-all border-2 flex items-center justify-between group flex-shrink-0',
-                selectedIndex === idx
-                  ? 'bg-white border-emerald-500 shadow-xl scale-[1.02]'
-                  : 'bg-white/50 border-transparent hover:border-slate-300',
-              ].join(' ')}
-            >
-              <div>
-                <span className="block text-[10px] font-black text-emerald-600 mb-1">
-                  0{idx + 1} MODULE
-                </span>
-                <span className={`font-bold text-base ${selectedIndex === idx ? 'text-slate-900' : 'text-slate-500'}`}>
-                  {t.title.split('：')[0]} {/* 只顯示前綴縮短長度 */}
-                </span>
+          
+          {TUTORIAL_CATEGORIES.map((category) => {
+            const isExpanded = expandedCategory === category.id;
+            
+            return (
+              <div key={category.id} className="flex flex-col gap-1 flex-shrink-0">
+                <button 
+                  onClick={() => setExpandedCategory(isExpanded ? '' : category.id)}
+                  className="flex items-center justify-between px-3 py-3 rounded-[16px] hover:bg-slate-100 transition-colors"
+                >
+                  <span className="font-bold text-sm text-slate-700">{category.title}</span>
+                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {isExpanded && (
+                  <div className="flex flex-col gap-2 mt-1 px-1">
+                    {category.items.map((t) => {
+                      const globalIdx = flattenedTutorials.findIndex(item => item.id === t.id);
+                      const isSelected = selectedIndex === globalIdx;
+                      
+                      return (
+                        <button
+                          id={`tutorial-btn-${globalIdx}`}
+                          key={t.id}
+                          onClick={() => setSelectedIndex(globalIdx)}
+                          className={[
+                            'w-full text-left p-4 rounded-[20px] transition-all border-2 flex items-center justify-between group flex-shrink-0',
+                            isSelected
+                              ? 'bg-white border-emerald-500 shadow-md scale-[1.02]'
+                              : 'bg-white/50 border-transparent hover:border-slate-300',
+                          ].join(' ')}
+                        >
+                          <div>
+                            <span className="block text-[10px] font-black text-emerald-600 mb-0.5">
+                              MODULE {String(globalIdx + 1).padStart(2, '0')}
+                            </span>
+                            <span className={`font-bold text-sm ${isSelected ? 'text-slate-900' : 'text-slate-500'}`}>
+                              {t.shortTitle}
+                            </span>
+                          </div>
+                          <ChevronRight className={`w-4 h-4 transition-transform flex-shrink-0 ${isSelected ? 'text-emerald-500 rotate-90' : 'text-slate-300 group-hover:translate-x-1'}`} />
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-              <ChevronRight className={`w-5 h-5 transition-transform flex-shrink-0 ${selectedIndex === idx ? 'text-emerald-500 rotate-90' : 'text-slate-300 group-hover:translate-x-1'}`} />
-            </button>
-          ))}
+            );
+          })}
         </aside>
 
         {/* =========================================
@@ -259,6 +331,8 @@ export const TutorialsView = () => {
                 onSquareClick={onSquareClick}
                 onPieceDragBegin={onPieceDragBegin}
                 customSquareStyles={optionSquares}
+                showPromotionDialog={true}
+                onPromotionPieceSelect={onPromotionPieceSelect}
               />
             </div>
             
@@ -278,12 +352,11 @@ export const TutorialsView = () => {
               {!isSuccess ? (
                 <div className="p-5 bg-slate-50 border-2 border-dashed border-slate-300 rounded-[24px] text-center">
                   <p className="text-base font-bold text-slate-700">{interactiveTask.instruction}</p>
-                  {feedbackError && (
-                    <div className="mt-3 flex items-center justify-center gap-2 text-rose-500 font-bold animate-pulse text-sm">
-                      <AlertCircle className="w-4 h-4" />
-                      <span>{feedbackError}</span>
-                    </div>
-                  )}
+                  {/* 使用隱藏空間保留高度，避免文字閃爍跳動 */}
+                  <div className={`mt-3 flex items-center justify-center gap-2 text-rose-500 font-bold transition-opacity ${feedbackError ? 'opacity-100 animate-pulse' : 'opacity-0 h-0 overflow-hidden mt-0'}`}>
+                    <AlertCircle className="w-4 h-4" />
+                    <span className="text-sm">{feedbackError}</span>
+                  </div>
                 </div>
               ) : (
                 <div className="p-5 bg-emerald-50 border-2 border-emerald-400 rounded-[24px] text-center animate-in zoom-in-95 duration-500">
@@ -291,7 +364,7 @@ export const TutorialsView = () => {
                     <CheckCircle2 className="w-6 h-6 flex-none" />
                     <p className="text-lg font-black">{interactiveTask.successMessage}</p>
                   </div>
-                  {selectedIndex < TUTORIALS.length - 1 && (
+                  {selectedIndex < flattenedTutorials.length - 1 && (
                     <button
                       onClick={nextModule}
                       className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-full font-bold transition-all shadow-lg hover:shadow-emerald-500/30 hover:-translate-y-1 text-sm"

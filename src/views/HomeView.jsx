@@ -1,6 +1,6 @@
 import { GraduationCap, Lightbulb, Trophy } from 'lucide-react';
 import { ChessBoard } from '../components/ChessBoard';
-import { TUTORIALS } from '../data/tutorials';
+import { TUTORIAL_CATEGORIES } from '../data/tutorials';
 
 // ============================================================
 // HomeView - 首頁
@@ -40,7 +40,7 @@ export const HomeView = ({ setView }) => (
       <div className="hidden lg:block relative">
         <div className="absolute -inset-4 bg-emerald-500/10 blur-3xl rounded-full" />
         <div className="relative bg-white p-6 rounded-[32px] shadow-2xl border border-slate-100 rotate-2">
-          <ChessBoard fen={TUTORIALS[0].fen} readOnly />
+          <ChessBoard fen={TUTORIAL_CATEGORIES[0].items[0].fen} readOnly />
         </div>
       </div>
     </div>
