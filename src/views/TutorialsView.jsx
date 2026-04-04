@@ -73,9 +73,14 @@ export const TutorialsView = () => {
        setOptionSquares({});
        return;
     }
+    // 如果課程設定了 continuousColor，且點擊的棋子顏色不符合，則不顯示移動選項也不允許移動
+    if (tutorial.continuousColor && piece.color !== tutorial.continuousColor) {
+      setOptionSquares({});
+      return;
+    }
 
     let searchGame = game;
-    // 讓新手可以看到非當前回合棋子的走法
+    // 讓新手可以看到非當前回合棋子的走法，或是允許連續同一方移動
     if (piece.color !== game.turn()) {
       const fenTokens = game.fen().split(' ');
       fenTokens[1] = piece.color;
@@ -179,7 +184,25 @@ export const TutorialsView = () => {
     if (isSuccess) return false;
     setFeedbackError('');
 
-    const gameCopy = new Chess(game.fen());
+    let gameCopy = new Chess(game.fen());
+    const piece = gameCopy.get(sourceSquare);
+
+    // 如果教學有設定只允許某一方移動，阻止另一方的移動
+    if (tutorial.continuousColor && piece && piece.color !== tutorial.continuousColor) {
+      return false;
+    }
+
+    // 動態調整回合，讓非正常開局或連續同一方移動成為可能
+    if (piece && piece.color !== gameCopy.turn()) {
+      const fenTokens = gameCopy.fen().split(' ');
+      fenTokens[1] = piece.color;
+      fenTokens[3] = '-'; // 取消過路兵，避免產生不合法的 FEN
+      try {
+        gameCopy = new Chess(fenTokens.join(' '));
+      } catch (e) {
+        // 若發生錯誤，退回使用原始狀態
+      }
+    }
 
     if (interactiveTask) {
       const expectedMove = interactiveTask.expectedMoves[taskStep];

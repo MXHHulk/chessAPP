@@ -51,6 +51,7 @@ export const TUTORIAL_CATEGORIES = [
           '國王不能移動到會被對方棋子攻擊的格子上。',
         ],
         fen: '8/8/8/8/2K5/8/8/8 w - - 0 1',
+        continuousColor: 'w',
         interactiveTask: {
           instruction: '輪到你的回合！試著將國王向前移動一步 (c4 到 c5)。',
           expectedMoves: [{ from: 'c4', to: 'c5' }],
@@ -67,6 +68,7 @@ export const TUTORIAL_CATEGORIES = [
           '城堡不能越過其他棋子。',
         ],
         fen: '8/1p3p2/8/8/8/1p3R2/8/8 w - - 0 1',
+        continuousColor: 'w',
         interactiveTask: {
           instruction: '試著利用城堡吃掉黑方的兵 (f3 到 f7)！',
           expectedMoves: [{ from: 'f3', to: 'f7' }],
@@ -83,6 +85,7 @@ export const TUTORIAL_CATEGORIES = [
           '主教不能越過其他棋子。',
         ],
         fen: '8/3p4/7p/p7/4p3/7p/1p6/2B5 w - - 0 1',
+        continuousColor: 'w',
         interactiveTask: {
           instruction: '我們來試試斜線的威力，用主教堂堂正正地吃掉黑方的兵 (c1 到 h6)！',
           expectedMoves: [{ from: 'c1', to: 'h6' }],
@@ -99,6 +102,7 @@ export const TUTORIAL_CATEGORIES = [
           '王后不能越過其他棋子。',
         ],
         fen: '8/5p2/8/8/8/1p3Q2/8/8 w - - 0 1',
+        continuousColor: 'w',
         interactiveTask: {
           instruction: '展現王后的強大火力，直接斜向消滅黑方的兵吧 (f3 到 b7)！',
           expectedMoves: [{ from: 'f3', to: 'b7', alternative: {from: 'f3', to:'f7'} }],
@@ -115,6 +119,7 @@ export const TUTORIAL_CATEGORIES = [
           '騎士每次移動必定會改變落點格子的顏色。',
         ],
         fen: '8/8/8/2p1p3/8/3N4/8/8 w - - 0 1',
+        continuousColor: 'w',
         interactiveTask: {
           instruction: '騎士可以跳過棋子。試著用騎士吃掉左上方的兵 (d3 到 c5)！',
           expectedMoves: [{ from: 'd3', to: 'c5' }],
@@ -132,6 +137,7 @@ export const TUTORIAL_CATEGORIES = [
           '兵只能斜線吃子。',
         ],
         fen: '8/8/3p4/8/8/8/4P3/8 w - - 0 1',
+        continuousColor: 'w',
         interactiveTask: {
           instruction: '這是兵的第一步，大膽地前進兩步吧 (e2 到 e4)！',
           expectedMoves: [{ from: 'e2', to: 'e4' }],
@@ -154,6 +160,7 @@ export const TUTORIAL_CATEGORIES = [
           '可以變換成除了國王以外的任何棋子（通常變為王后）。',
         ],
         fen: '8/5P2/8/8/8/8/8/8 w - - 0 1',
+        continuousColor: 'w',
         interactiveTask: {
           instruction: '將兵推到底線 (f7 到 f8)，並選擇升變為王后！',
           expectedMoves: [{ from: 'f7', to: 'f8', promotion: 'q' }],
@@ -169,6 +176,7 @@ export const TUTORIAL_CATEGORIES = [
           '當對方兵第一次移動兩格時，如果你的兵在它的旁邊，你可以吃掉它。',
         ],
         fen: '8/8/8/2Pp4/8/8/8/8 w - d6 0 1',
+        continuousColor: 'w',
         interactiveTask: {
           instruction: '對方剛才推進了 d 列的兵。趕快使出「吃過路兵」，將兵移到左上角 (c5 到 d6)！',
           expectedMoves: [{ from: 'c5', to: 'd6' }],
@@ -186,6 +194,7 @@ export const TUTORIAL_CATEGORIES = [
           '國王不能處於被攻擊的狀態，也不能越過被攻擊的格子。',
         ],
         fen: '8/8/8/8/8/8/8/R3K2R w KQ - 0 1',
+        continuousColor: 'w',
         interactiveTask: {
           instruction: '我們來進行「短易位」。將國王移動兩格 (e1 到 g1)，城堡會自動躍過它！',
           expectedMoves: [{ from: 'e1', to: 'g1' }],
@@ -204,6 +213,7 @@ export const TUTORIAL_CATEGORIES = [
           '3. 吃掉威脅源。',
         ],
         fen: '8/4k3/8/8/4R3/8/2K5/8 b - - 0 1',
+        continuousColor: 'w',
         interactiveTask: {
           instruction: '白方的城堡正在「將軍」！趕緊將黑方的國王移動到安全的地方 (比如 e7 到 d7)。',
           expectedMoves: [{ from: 'e7', to: 'd7' }],
