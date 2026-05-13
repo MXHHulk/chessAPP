@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { BookOpen, Sword, Target } from 'lucide-react';
 import { HomeView }      from './views/HomeView';
 import { TutorialsView } from './views/TutorialsView';
 import { TacticsView }   from './views/TacticsView';
 import { useTactics }    from './hooks/useTactics';
+import BattleView from './views/BattleView';
 
 // ============================================================
 // App.jsx
@@ -11,13 +12,16 @@ import { useTactics }    from './hooks/useTactics';
 // 不含任何業務邏輯，修改頁面請前往 src/views/。
 // ============================================================
 
+// 👉 修改 1：將「人機對戰」直接加入你原本設計好的導覽列陣列中
+// 我這裡沿用了 Sword 圖標，你也可以依照喜好換成 Cpu 或 Gamepad2
 const NAV_ITEMS = [
   { id: 'tutorials', label: '基礎課程', icon: <BookOpen className="w-4 h-4" /> },
   { id: 'tactics',   label: '戰術收錄', icon: <Target   className="w-4 h-4" /> },
+  { id: 'battle',    label: '人機對戰', icon: <Sword    className="w-4 h-4" /> }, 
 ];
 
 export default function App() {
-  const [view, setView]     = useState('home');
+  const [view, setView] = useState('home');
   const { tactics } = useTactics();
 
   return (
@@ -58,11 +62,9 @@ export default function App() {
       <main className="max-w-6xl mx-auto p-6 md:p-10">
         {view === 'home'      && <HomeView setView={setView} />}
         {view === 'tutorials' && <TutorialsView />}
-        {view === 'tactics'   && (
-          <TacticsView
-            tactics={tactics}
-          />
-        )}
+        {view === 'tactics'   && <TacticsView tactics={tactics} />}
+        {/* 👉 修改 3：加上當 view 狀態切換到 battle 時，渲染你的對戰畫面 */}
+        {view === 'battle'    && <BattleView />}
       </main>
 
       {/* 頁尾 */}
