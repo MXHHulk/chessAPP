@@ -50,7 +50,7 @@ export const TUTORIAL_CATEGORIES = [
           '國王可以向任何方向移動「一格」。',
           '國王不能移動到會被對方棋子攻擊的格子上。',
         ],
-        fen: '8/8/8/8/2K5/8/8/8 w - - 0 1',
+        fen: '8/8/8/8/2K2p2/8/8/8 w - - 0 1',
         continuousColor: 'w',
         interactiveTask: {
           instruction: '輪到你的回合！試著將國王向前移動一步 (c4 到 c5)。',
@@ -105,7 +105,7 @@ export const TUTORIAL_CATEGORIES = [
         continuousColor: 'w',
         interactiveTask: {
           instruction: '展現王后的強大火力，直接斜向消滅黑方的兵吧 (f3 到 b7)！',
-          expectedMoves: [{ from: 'f3', to: 'b7', alternative: {from: 'f3', to:'f7'} }],
+          expectedMoves: [{ from: 'f3', to: 'b7', alternative: { from: 'f3', to: 'f7' } }],
           successMessage: '太強了吧！這就是為什麼所有人都喜歡王后。',
         }
       },

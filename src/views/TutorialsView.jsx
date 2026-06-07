@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { ChevronRight, ChevronDown, Info, RotateCcw, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
+import { ChevronRight, ChevronDown, Info, RotateCcw, CheckCircle2, AlertCircle, ArrowRight, Bot } from 'lucide-react'; // --- 修改：新增了 Bot 圖示供 AI 使用 ---
 import { Chess } from 'chess.js';
 import { ChessBoard } from '../components/ChessBoard';
 import { TUTORIAL_CATEGORIES } from '../data/tutorials';
+import { useAICoach } from '../hooks/useAICoach'; // --- 新增：引入 AI Hook ---
 
 // ============================================================
 // TutorialsView - 基礎課程頁面
@@ -30,6 +31,9 @@ export const TutorialsView = () => {
   // 高亮位置狀態
   const [selectedSquare, setSelectedSquare] = useState('');
   const [optionSquares, setOptionSquares] = useState({});
+
+  // --- 新增：初始化 AI 教練狀態 ---
+  const { aiFeedback, isLoading, askCoach } = useAICoach();
 
   useEffect(() => {
     resetTutorial();
@@ -226,6 +230,10 @@ export const TutorialsView = () => {
             } else {
               setTaskStep(step => step + 1);
             }
+
+            // --- 新增：成功移動後，呼叫 AI 分析此盤面 ---
+            askCoach(gameCopy.fen(), validMove.san);
+
             return true;
           }
         } catch {
@@ -246,6 +254,10 @@ export const TutorialsView = () => {
       if (validMove) {
         setGame(gameCopy);
         setCurrentFen(gameCopy.fen());
+        
+        // --- 新增：自由模式下成功移動後，呼叫 AI 分析此盤面 ---
+        askCoach(gameCopy.fen(), validMove.san);
+
         return true;
       }
     } catch {
@@ -415,7 +427,7 @@ export const TutorialsView = () => {
             </p>
           </div>
 
-          <div className="p-6 bg-white rounded-[24px] shadow-sm border border-slate-100">
+          <div className="p-6 bg-white rounded-[24px] shadow-sm border border-slate-100 mb-6">
             <h4 className="font-black text-xl text-slate-900 mb-6 flex items-center gap-3">
               <Info className="w-6 h-6 text-emerald-500" /> 章節要點
             </h4>
@@ -431,6 +443,28 @@ export const TutorialsView = () => {
             </ul>
           </div>
           
+          {/* =========================================
+              新增：AI 教練即時回饋區塊
+          ========================================= */}
+          <div className="p-6 bg-white rounded-[24px] shadow-sm border border-emerald-100 flex-grow flex flex-col">
+            <h4 className="font-black text-xl text-slate-900 mb-4 flex items-center gap-3">
+              <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white">
+                <Bot className="w-5 h-5" />
+              </div>
+              Ollama 智能教練
+            </h4>
+            <div className="flex-grow bg-slate-50 p-4 rounded-[16px] text-sm text-slate-700 leading-relaxed whitespace-pre-wrap flex items-start">
+              {isLoading ? (
+                <span className="animate-pulse text-emerald-600 font-medium">
+                  教練正在與引擎分析盤面中...
+                </span>
+              ) : (
+                aiFeedback
+              )}
+            </div>
+          </div>
+          {/* ========================================= */}
+
         </section>
 
       </div>
